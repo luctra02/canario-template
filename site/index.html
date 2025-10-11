@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Canario Template</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Welcome to Canario!</h1>
+      <p id="flag-status">Checking feature flag...</p>
+      <button onclick="checkFeatureFlag()">Refresh Flag</button>
+    </div>
+
+    <script>
+      const API_URL = "__GITLAB_API_URL__";
+      const TOKEN = "__GITLAB_ACCESS_TOKEN__";
+      const FLAG_NAME = "__FEATURE_FLAG_NAME__";
+
+      async function checkFeatureFlag() {
+        try {
+          const res = await fetch(API_URL, {
+            headers: {
+              Authorization: `Bearer ${TOKEN}`,
+              "Content-Type": "application/json",
+            },
+          });
+
+          if (!res.ok) throw new Error("GitLab API error");
+          const flags = await res.json();
+          const flag = flags.find((f) => f.name === FLAG_NAME);
+          const status = document.getElementById("flag-status");
+
+          if (flag && flag.active) {
+            document.body.classList.remove("flag-off");
+            document.body.classList.add("flag-on");
+            status.innerHTML = `🎉 Feature flag <b>${FLAG_NAME}</b> is <b>ON</b>!`;
+          } else {
+            document.body.classList.remove("flag-on");
+            document.body.classList.add("flag-off");
+            status.innerHTML = `🚧 Feature flag <b>${FLAG_NAME}</b> is <b>OFF</b>.`;
+          }
+        } catch (err) {
+          console.error(err);
+          document.getElementById("flag-status").textContent =
+            "❌ Could not fetch feature flag state.";
+        }
+      }
+
+      checkFeatureFlag();
+    </script>
+  </body>
+</html>

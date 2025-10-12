@@ -36,16 +36,16 @@
           if (isActive) {
             document.body.classList.add("flag-on");
             document.body.classList.remove("flag-off");
-            status.innerHTML = `🎉 Feature <b>${FEATURE_FLAG_NAME}</b> is <b>ON</b>!`;
+            status.innerHTML = `Feature <b>${FEATURE_FLAG_NAME}</b> is <b>ON</b>!`;
           } else {
             document.body.classList.add("flag-off");
             document.body.classList.remove("flag-on");
-            status.innerHTML = `🚧 Feature <b>${FEATURE_FLAG_NAME}</b> is <b>OFF</b>.`;
+            status.innerHTML = `Feature <b>${FEATURE_FLAG_NAME}</b> is <b>OFF</b>.`;
           }
         } catch (error) {
           console.error(error);
           document.body.classList.remove("flag-on", "flag-off");
-          status.innerHTML = "❌ Could not fetch feature flag state.";
+          status.innerHTML = "Could not fetch feature flag state.";
         }
       }
 

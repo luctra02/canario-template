@@ -1,9 +1,7 @@
 import express from "express";
-import cors from "cors";
 import fetch from "node-fetch";
 
 const app = express();
-app.use(cors());
 
 const { GITLAB_API_URL, GITLAB_ACCESS_TOKEN, PROJECT_ID } = process.env;
 

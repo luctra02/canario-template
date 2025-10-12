@@ -13,37 +13,30 @@
     </div>
 
     <script>
-      const API_URL = "__GITLAB_API_URL__";
-      const TOKEN = "__GITLAB_ACCESS_TOKEN__";
-      const FLAG_NAME = "__FEATURE_FLAG_NAME__";
+
+      const FLAG_PROXY_URL = "__FLAG_PROXY_URL__";
+      const FEATURE_FLAG_NAME = "__FEATURE_FLAG_NAME__";
 
       async function checkFeatureFlag() {
+        const status = document.getElementById("flag-status");
         try {
-          const res = await fetch(API_URL, {
-            headers: {
-              Authorization: `Bearer ${TOKEN}`,
-              "Content-Type": "application/json",
-            },
-          });
+          const res = await fetch(FLAG_PROXY_URL, { cache: "no-store" });
+          if (!res.ok) throw new Error("Flag proxy error");
+          const data = await res.json(); // { flagName: true/false }
+          const isActive = !!data[FEATURE_FLAG_NAME];
 
-          if (!res.ok) throw new Error("GitLab API error");
-          const flags = await res.json();
-          const flag = flags.find((f) => f.name === FLAG_NAME);
-          const status = document.getElementById("flag-status");
-
-          if (flag && flag.active) {
-            document.body.classList.remove("flag-off");
+          if (isActive) {
             document.body.classList.add("flag-on");
-            status.innerHTML = `🎉 Feature flag <b>${FLAG_NAME}</b> is <b>ON</b>!`;
+            document.body.classList.remove("flag-off");
+            status.innerHTML = `🎉 Feature <b>${FEATURE_FLAG_NAME}</b> is <b>ON</b>!`;
           } else {
-            document.body.classList.remove("flag-on");
             document.body.classList.add("flag-off");
-            status.innerHTML = `🚧 Feature flag <b>${FLAG_NAME}</b> is <b>OFF</b>.`;
+            document.body.classList.remove("flag-on");
+            status.innerHTML = `🚧 Feature <b>${FEATURE_FLAG_NAME}</b> is <b>OFF</b>.`;
           }
-        } catch (err) {
-          console.error(err);
-          document.getElementById("flag-status").textContent =
-            "❌ Could not fetch feature flag state.";
+        } catch (e) {
+          console.error(e);
+          status.textContent = "❌ Could not fetch feature flag state.";
         }
       }
 

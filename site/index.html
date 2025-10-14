@@ -5,7 +5,7 @@
     <title>Canario Template</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
-   <body>
+  <body>
     <div class="container">
       <h1>Welcome to Canario!</h1>
       <p id="flag-status">Checking feature flag...</p>
@@ -13,22 +13,19 @@
     </div>
 
     <script>
-      // These will be replaced by your Dockerfile using sed
-      const FLAG_PROXY_URL = "__FLAG_PROXY_URL__";
-      const FEATURE_FLAG_NAME = "__FEATURE_FLAG_NAME__";
+      const FEATURE_FLAG_NAME = "flag1";
 
       async function checkFeatureFlag() {
         const status = document.getElementById("flag-status");
 
         try {
-          const res = await fetch(FLAG_PROXY_URL, { cache: "no-store" });
+          const res = await fetch("/flags", { cache: "no-store" });
           if (!res.ok) throw new Error("Flag proxy error");
 
           const data = await res.json();
-          // Example: data = { "flag1": true, "flag2": false }
 
           if (!data.hasOwnProperty(FEATURE_FLAG_NAME)) {
-            throw new Error(`Feature flag "${FEATURE_FLAG_NAME}" not found in response`);
+            throw new Error(`Feature flag "${FEATURE_FLAG_NAME}" not found`);
           }
 
           const isActive = Boolean(data[FEATURE_FLAG_NAME]);
@@ -49,7 +46,7 @@
         }
       }
 
-      // Check on page load
+      // Check immediately when page loads
       checkFeatureFlag();
     </script>
   </body>

@@ -43,8 +43,6 @@ push:
 # --- Stage 4: Deploy to WebServer VM ---
 deploy:
   stage: deploy
-  before_script:
-    - apt-get update -y && apt-get install -y openssh-client
   script:
     - echo "Deploying to WebServer VM..."
     - ssh -o StrictHostKeyChecking=no $WEB_SERVER_USER@$WEB_SERVER_IP "

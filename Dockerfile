@@ -5,7 +5,7 @@ WORKDIR /app
 
 # Copy backend logic and static files
 COPY server/server.js .
-COPY site ./site
+COPY site ./public
 
 # Install dependencies
 RUN npm init -y \

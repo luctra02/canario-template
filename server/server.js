@@ -23,4 +23,7 @@ app.get("/flags", async (_req, res) => {
   }
 });
 
+app.get("/health", (_req, res) => res.sendStatus(200));
+
+
 app.listen(8080, () => console.log("Web + Flag proxy running on :8080"));

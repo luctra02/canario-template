@@ -45,15 +45,12 @@ deploy:
   stage: deploy
   script:
     - >
-      ssh -t -o StrictHostKeyChecking=no "${WEB_SERVER_USER}@${WEB_SERVER_IP}" "
+      ssh -o StrictHostKeyChecking=no "${WEB_SERVER_USER}@${WEB_SERVER_IP}" "
       bash -lc '
       docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY} &&
       docker pull ${IMAGE_TAG} &&
       docker stop canario-web || true &&
       docker rm canario-web || true &&
-      docker run -d --name canario-web -p 8080:8080
-        -e PROJECT_ID=${PROJECT_ID}
-        -e GITLAB_ACCESS_TOKEN=${GITLAB_ACCESS_TOKEN}
-        ${IMAGE_TAG}'"
+      docker run -d --name canario-web -p 8080:8080 -e PROJECT_ID=${PROJECT_ID} -e GITLAB_ACCESS_TOKEN=${GITLAB_ACCESS_TOKEN} ${IMAGE_TAG}'"
   only:
     - main

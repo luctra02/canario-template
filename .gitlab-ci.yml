@@ -1,0 +1,68 @@
+stages:
+  - build
+  - test
+  - push
+  - deploy
+
+variables:
+  IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+
+# --- Stage 1: Build Docker Image ---
+build:
+  stage: build
+  tags:
+    - testserver
+  script:
+    - echo "Building Docker image..."
+    - docker build -t $IMAGE_TAG .
+  only:
+    - main
+
+# --- Stage 2: Test Container ---
+test:
+  stage: test
+  tags:
+    - testserver
+  script:
+    - echo "Starting test container..."
+    - docker run -d --rm -p 8080:8080 --name testapp $IMAGE_TAG
+    - sleep 5
+    - echo "Performing health check..."
+    - curl -f http://localhost:8080 || (echo "Health check failed!" && exit 1)
+  after_script:
+    - docker stop testapp || true
+  only:
+    - main
+
+# --- Stage 3: Push to GitLab Registry ---
+push:
+  stage: push
+  tags:
+    - testserver
+  script:
+    - echo "Logging into GitLab registry..."
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker push $IMAGE_TAG
+  only:
+    - main
+
+# --- Stage 4: Deploy to WebServer VM ---
+deploy:
+  stage: deploy
+  tags:
+    - testserver
+  before_script:
+    - apt-get update -y && apt-get install -y openssh-client
+  script:
+    - echo "Deploying to WebServer VM..."
+    - ssh -o StrictHostKeyChecking=no $WEB_SERVER_USER@$WEB_SERVER_IP "
+        docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY &&
+        docker pull $IMAGE_TAG &&
+        docker stop canario-web || true &&
+        docker rm canario-web || true &&
+        docker run -d --name canario-web -p 8080:8080 \
+          -e PROJECT_ID=$PROJECT_ID \
+          -e GITLAB_ACCESS_TOKEN=$GITLAB_ACCESS_TOKEN \
+          $IMAGE_TAG"
+  only:
+    - main

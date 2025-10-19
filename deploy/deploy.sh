@@ -75,7 +75,7 @@ fi
     fi
 
 # Stop old container
-docker stop -t 5 "${CONTAINER_NAME}-${ACTIVE_PORT}" 2>/dev/null || true
+docker stop "${CONTAINER_NAME}-${ACTIVE_PORT}" 2>/dev/null || true
 docker rm "${CONTAINER_NAME}-${ACTIVE_PORT}" 2>/dev/null || true
 
 echo "Deployment complete for $PROJECT_NAME — now serving on port $TARGET_PORT"

@@ -5,6 +5,8 @@ IMAGE_TAG=$1
 PROJECT_NAME=$2
 PORT_OLD=$3
 PORT_NEW=$4
+GITLAB_ACCESS_TOKEN=$5
+PROJECT_ID=$6
 
 CONTAINER_NAME="${PROJECT_NAME,,}"
 
@@ -25,7 +27,12 @@ fi
 echo "Active port: $ACTIVE_PORT | Deploying to port: $TARGET_PORT"
 
 # Run new container
-docker run -d --name "${CONTAINER_NAME}-${TARGET_PORT}" -p $TARGET_PORT:8080 "$IMAGE_TAG"
+docker run -d \
+  --name "${CONTAINER_NAME}-${TARGET_PORT}" \
+  -p $TARGET_PORT:8080 \
+  -e PROJECT_ID="${PROJECT_ID}" \
+  -e GITLAB_ACCESS_TOKEN="${GITLAB_ACCESS_TOKEN}" \
+  "$IMAGE_TAG"
 
 # Health check
 sleep 5

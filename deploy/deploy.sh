@@ -10,7 +10,7 @@ PROJECT_ID=$6
 
 CONTAINER_NAME="${PROJECT_NAME,,}"
 
-echo "🚀 Deploying $PROJECT_NAME using old port $PORT_OLD and new port $PORT_NEW..."
+echo "Deploying $PROJECT_NAME using old port $PORT_OLD and new port $PORT_NEW..."
 
 # Pull the latest image
 docker pull "$IMAGE_TAG"
@@ -50,7 +50,6 @@ BACKEND_FILE="${BACKENDS_DIR}/${CONTAINER_NAME}.cfg"
 
 if [ ! -f "$BACKEND_FILE" ]; then
   echo "No HAProxy backend found for $PROJECT_NAME. Creating one..."
-
   sudo mkdir -p "$BACKENDS_DIR"
   sudo bash -c "cat > $BACKEND_FILE" <<EOF
 backend ${CONTAINER_NAME}_backend
@@ -60,19 +59,19 @@ backend ${CONTAINER_NAME}_backend
     server ${CONTAINER_NAME}-old 127.0.0.1:${PORT_OLD} check 
     server ${CONTAINER_NAME}-new 127.0.0.1:${PORT_NEW} check 
 EOF
-fi
 
-    # Combine base config file + all backend files
-    sudo bash -c 'cat /etc/haproxy/haproxy.base /etc/haproxy/backends/*.cfg > /etc/haproxy/haproxy.cfg'
+  # Combine base config file + all backend files
+  sudo bash -c 'cat /etc/haproxy/haproxy.base /etc/haproxy/backends/*.cfg > /etc/haproxy/haproxy.cfg'
 
-    # Validate and reload
-    if sudo haproxy -c -f /etc/haproxy/haproxy.cfg; then
+  # Validate and reload
+  if sudo haproxy -c -f /etc/haproxy/haproxy.cfg; then
     echo "HAProxy config valid. Reloading..."
     sudo systemctl reload haproxy
-    else
+  else
     echo "Invalid HAProxy config. Aborting reload."
     exit 1
-    fi
+  fi
+fi
 
 # Stop old container
 docker stop "${CONTAINER_NAME}-${ACTIVE_PORT}" 2>/dev/null || true

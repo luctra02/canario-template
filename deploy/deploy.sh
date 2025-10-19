@@ -68,7 +68,7 @@ sudo bash -c 'cat /etc/haproxy/haproxy.base /etc/haproxy/backends/*.cfg > /etc/h
 # Validate and reload
 if sudo haproxy -c -f /etc/haproxy/haproxy.cfg; then
   echo "HAProxy config valid. Reloading..."
-  sudo systemctl restart haproxy
+  sudo systemctl reload haproxy
 else
   echo "Invalid HAProxy config. Aborting reload."
   exit 1

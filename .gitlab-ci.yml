@@ -7,7 +7,7 @@ stages:
 variables:
   IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
 
-# --- Stage 1: Build Docker Image ---
+# Stage 1: Build Docker Image
 build:
   stage: build
   script:
@@ -16,7 +16,7 @@ build:
   only:
     - main
 
-# --- Stage 2: Test Container ---
+# Stage 2: Test Container
 test:
   stage: test
   script:
@@ -30,7 +30,7 @@ test:
   only:
     - main
 
-# --- Stage 3: Push to GitLab Registry ---
+# Push to GitLab Registry
 push:
   stage: push
   script:
@@ -40,7 +40,7 @@ push:
   only:
     - main
 
-# --- Stage 4: Deploy to WebServer VM ---
+# Deploy to WebServer VM using deploy.sh script
 deploy:
   stage: deploy
   script:
@@ -48,9 +48,8 @@ deploy:
       ssh -o StrictHostKeyChecking=no "${WEB_SERVER_USER}@${WEB_SERVER_IP}" "
       bash -lc '
       docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY} &&
-      docker pull ${IMAGE_TAG} &&
-      docker stop canario-web || true &&
-      docker rm canario-web || true &&
-      docker run -d --name canario-web -p 8080:8080 -e PROJECT_ID=${PROJECT_ID} -e GITLAB_ACCESS_TOKEN=${GITLAB_ACCESS_TOKEN} ${IMAGE_TAG}'"
+      cd ${PROJECT_PATH}/deploy &&
+      chmod +x deploy.sh &&
+      ./deploy.sh ${IMAGE_TAG} ${HOST_PORT}'"
   only:
     - main

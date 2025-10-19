@@ -7,7 +7,7 @@ stages:
 variables:
   IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
 
-# Stage 1: Build Docker Image
+# Build Docker Image
 build:
   stage: build
   script:
@@ -16,7 +16,7 @@ build:
   only:
     - main
 
-# Stage 2: Test Container
+# Test Container
 test:
   stage: test
   script:

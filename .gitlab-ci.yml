@@ -49,7 +49,7 @@ deploy:
       bash -lc '
       docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY} &&
       cd ${CI_PROJECT_NAME}/deploy &&
-      chmod +x deploy.sh &&
-      ./deploy.sh ${IMAGE_TAG} ${HOST_PORT}'"
+      sudo chmod +x deploy.sh &&
+      ./deploy.sh ${IMAGE_TAG}'"
   only:
     - main

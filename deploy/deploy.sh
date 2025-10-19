@@ -57,8 +57,8 @@ backend ${CONTAINER_NAME}_backend
     mode http
     balance roundrobin
     option httpchk GET /
-    server ${CONTAINER_NAME}-old 127.0.0.1:${PORT_OLD} check
-    server ${CONTAINER_NAME}-new 127.0.0.1:${PORT_NEW} check
+    server ${CONTAINER_NAME}-old 127.0.0.1:${PORT_OLD} check inter 1s rise 1 fall 2
+    server ${CONTAINER_NAME}-new 127.0.0.1:${PORT_NEW} check inter 1s rise 1 fall 2
 EOF
 fi
 
@@ -68,12 +68,11 @@ sudo bash -c 'cat /etc/haproxy/haproxy.base /etc/haproxy/backends/*.cfg > /etc/h
 # Validate and reload
 if sudo haproxy -c -f /etc/haproxy/haproxy.cfg; then
   echo "HAProxy config valid. Reloading..."
-  sudo /usr/sbin/haproxy -f /etc/haproxy/haproxy.cfg -sf $(pidof haproxy)
+  sudo systemctl reload haproxy
 else
   echo "Invalid HAProxy config. Aborting reload."
   exit 1
 fi
-
 
 # Stop old container
 docker stop "${CONTAINER_NAME}-${ACTIVE_PORT}" 2>/dev/null || true

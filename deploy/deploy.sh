@@ -57,8 +57,8 @@ backend ${CONTAINER_NAME}_backend
     mode http
     balance roundrobin
     option httpchk GET /
-    server ${CONTAINER_NAME}-old 127.0.0.1:${PORT_OLD} check inter 5s rise 2 fall 5
-    server ${CONTAINER_NAME}-new 127.0.0.1:${PORT_NEW} check inter 5s rise 2 fall 5   
+    server ${CONTAINER_NAME}-old 127.0.0.1:${PORT_OLD} check
+    server ${CONTAINER_NAME}-new 127.0.0.1:${PORT_NEW} check
 EOF
 fi
 

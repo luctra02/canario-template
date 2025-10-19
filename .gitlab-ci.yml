@@ -50,6 +50,6 @@ deploy:
       docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY} &&
       cd ${CI_PROJECT_NAME}/deploy &&
       sudo chmod +x deploy.sh &&
-      ./deploy.sh ${IMAGE_TAG}'"
+      ./deploy.sh ${IMAGE_TAG} ${CI_PROJECT_NAME} ${PORT_OLD} ${PORT_NEW}'"
   only:
     - main

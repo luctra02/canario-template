@@ -53,6 +53,7 @@ backend ${CONTAINER_NAME}_backend
     server ${CONTAINER_NAME}-old 127.0.0.1:${PORT_OLD} check inter 5s rise 2 fall 5
     server ${CONTAINER_NAME}-new 127.0.0.1:${PORT_NEW} check inter 5s rise 2 fall 5   
 EOF
+fi
 
 # Combine base config file + all backend files
 sudo bash -c 'cat /etc/haproxy/haproxy.base /etc/haproxy/backends/*.cfg > /etc/haproxy/haproxy.cfg'

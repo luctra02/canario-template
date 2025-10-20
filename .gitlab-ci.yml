@@ -26,7 +26,7 @@ test:
     - echo "Performing health check..."
     - curl -f http://localhost:8080 || (echo "Health check failed!" && exit 1)
   after_script:
-    - docker stop testapp || true
+    - docker stop $CI_PROJECT_NAME || true
   only:
     - main
 

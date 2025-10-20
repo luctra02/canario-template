@@ -21,7 +21,7 @@ test:
   stage: test
   script:
     - echo "Starting test container..."
-    - docker run -d --rm -p 8080:8080 --name testapp $IMAGE_TAG
+    - docker run -d --rm -P --name $CI_PROJECT_NAME $IMAGE_TAG
     - sleep 5
     - echo "Performing health check..."
     - curl -f http://localhost:8080 || (echo "Health check failed!" && exit 1)

@@ -8,31 +8,29 @@ PORT_NEW=$4
 GITLAB_ACCESS_TOKEN=$5
 PROJECT_ID=$6
 
-CONTAINER_NAME="${PROJECT_NAME,,}"
+PROJECT_NAME=${PROJECT_NAME,,}
+CONTAINER_NAME="${PROJECT_NAME}-${IMAGE_TAG##*:}"
+
+if docker ps --format '{{.Names}}' | grep -q "$CONTAINER_NAME"; then
+  echo "Version $IMAGE_TAG is already deployed and running. Skipping redeploy."
+  exit 0
+fi
 
 echo "Deploying $PROJECT_NAME using old port $PORT_OLD and new port $PORT_NEW..."
 
 # Pull the latest image
 docker pull "$IMAGE_TAG"
 
-# Detect active port (which container is live)
-if docker ps --format '{{.Ports}}' | grep -q "$PORT_OLD->8080"; then
-  ACTIVE_PORT=$PORT_OLD
-  TARGET_PORT=$PORT_NEW
-else
-  ACTIVE_PORT=$PORT_NEW
-  TARGET_PORT=$PORT_OLD
-fi
-
-echo "Active port: $ACTIVE_PORT | Deploying to port: $TARGET_PORT"
-
-# Run new container
-docker run -d \
-  --name "${CONTAINER_NAME}-${TARGET_PORT}" \
-  -p $TARGET_PORT:8080 \
+# Run the new container on a random port
+echo "Starting new container for $PROJECT_NAME..."
+docker run -d -P \
+  --name "$CONTAINER_NAME" \
   -e PROJECT_ID="${PROJECT_ID}" \
   -e GITLAB_ACCESS_TOKEN="${GITLAB_ACCESS_TOKEN}" \
   "$IMAGE_TAG"
+
+TARGET_PORT=$(docker port "$CONTAINER_NAME" 8080/tcp | cut -d: -f2 | head -n1)
+echo "Container started on host port $TARGET_PORT"
 
 # Health check
 sleep 5
@@ -40,24 +38,24 @@ if curl -fs "http://localhost:$TARGET_PORT" > /dev/null; then
   echo "New version healthy on port $TARGET_PORT"
 else
   echo "Health check failed on port $TARGET_PORT. Rolling back..."
-  docker stop "${CONTAINER_NAME}-${TARGET_PORT}" && docker rm "${CONTAINER_NAME}-${TARGET_PORT}"
+  docker stop "${CONTAINER_NAME}" && docker rm "${CONTAINER_NAME}"
   exit 1
 fi
 
 # Create HAProxy backend config if missing
 BACKENDS_DIR="/etc/haproxy/backends"
-BACKEND_FILE="${BACKENDS_DIR}/${CONTAINER_NAME}.cfg"
+BACKEND_FILE="${BACKENDS_DIR}/${PROJECT_NAME}.cfg"
+SOCKET="/run/haproxy/admin.sock"
+BACKEND_NAME="${PROJECT_NAME}_backend"
 
 if [ ! -f "$BACKEND_FILE" ]; then
   echo "No HAProxy backend found for $PROJECT_NAME. Creating one..."
   sudo mkdir -p "$BACKENDS_DIR"
   sudo bash -c "cat > $BACKEND_FILE" <<EOF
-backend ${CONTAINER_NAME}_backend
+backend ${BACKEND_NAME}
     mode http
     balance roundrobin
     option httpchk GET /
-    server ${CONTAINER_NAME}-old 127.0.0.1:${PORT_OLD} check 
-    server ${CONTAINER_NAME}-new 127.0.0.1:${PORT_NEW} check 
 EOF
 
   # Combine base config file + all backend files
@@ -73,8 +71,26 @@ EOF
   fi
 fi
 
-# Stop old container
-docker stop "${CONTAINER_NAME}-${ACTIVE_PORT}" 2>/dev/null || true
-docker rm "${CONTAINER_NAME}-${ACTIVE_PORT}" 2>/dev/null || true
+
+
+# Enable the new one
+echo "add server ${BACKEND_NAME}/${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check weight 100" | sudo socat stdio $SOCKET || true
+echo "enable server ${BACKEND_NAME}/${CONTAINER_NAME}" | sudo socat stdio $SOCKET
+
+
+# Optionally disable the previous version
+OLD_SERVER=$(echo "show servers state" | sudo socat stdio $SOCKET \
+  | grep "${BACKEND_NAME}" | grep -v "${CONTAINER_NAME}" | awk '{print $4}' | head -n1)
+if [ -n "$OLD_SERVER" ]; then
+  echo "Disabling old server $OLD_SERVER..."
+  echo "disable server ${BACKEND_NAME}/${OLD_SERVER}" | sudo socat stdio $SOCKET
+
+fi
+
+docker ps -a --format '{{.Names}}' | grep "^${PROJECT_NAME}-" | grep -v "$CONTAINER_NAME" | while read old; do
+  echo "Stopping old container: $old"
+  docker stop "$old" || true
+  docker rm "$old" || true
+done
 
 echo "Deployment complete for $PROJECT_NAME — now serving on port $TARGET_PORT"

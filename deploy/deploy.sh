@@ -56,6 +56,7 @@ backend ${BACKEND_NAME}
     mode http
     balance roundrobin
     option httpchk GET /
+    server placeholder 127.0.0.1:1 disabled
 EOF
 
   # Combine base config file + all backend files

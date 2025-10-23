@@ -83,6 +83,7 @@ OLD_SERVER=$(echo "show servers state" | sudo socat stdio $SOCKET \
   | grep "${BACKEND_NAME}" | grep -v "${CONTAINER_NAME}" | awk '{print $4}' | head -n1)
 if [ -n "$OLD_SERVER" ]; then
   echo "Disabling old server $OLD_SERVER..."
+  echo "set server ${BACKEND_NAME}/${OLD_SERVER} state maint" | sudo socat stdio "$SOCKET"
   echo "del server ${BACKEND_NAME}/${OLD_SERVER}" | sudo socat stdio "$SOCKET"
 
 fi

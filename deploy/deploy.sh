@@ -94,4 +94,9 @@ docker ps -a --format '{{.Names}}' | grep "^${PROJECT_NAME}-" | grep -v "$CONTAI
   docker rm "$old" || true
 done
 
+# Save HAProxy runtime state for persistence (restores on reload/reboot)
+echo "Saving HAProxy runtime state..."
+echo "show servers state" | sudo socat stdio /run/haproxy/admin.sock > /etc/haproxy/server.state || true
+
+
 echo "Deployment complete for $PROJECT_NAME — now serving on port $TARGET_PORT"

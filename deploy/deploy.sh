@@ -82,6 +82,9 @@ fi
     exit 1
   fi
 
+# Stop old container
+docker stop ${OLD_SERVER} 2>/dev/null || true
+docker rm ${OLD_SERVER} 2>/dev/null || true
 
 
 

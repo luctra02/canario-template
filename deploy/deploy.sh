@@ -55,8 +55,26 @@ backend ${BACKEND_NAME}
     option httpchk GET /
 EOF
 
+  # Create HAProxy frontend rule if missing
+  ROUTE_NAME=${5:-$PROJECT_NAME}
+  FRONTENDS_DIR="/etc/haproxy/frontends"
+  FRONTEND_FILE="${FRONTENDS_DIR}/${PROJECT_NAME}.cfg"
+
+  if [ ! -f "$FRONTEND_FILE" ]; then
+    echo "No HAProxy frontend rule found for $PROJECT_NAME. Creating one..."
+    sudo mkdir -p "$FRONTENDS_DIR"
+    sudo bash -c "cat > $FRONTEND_FILE" <<EOF
+acl host_${ROUTE_NAME} hdr_beg(host) ${ROUTE_NAME}.
+use_backend ${BACKEND_NAME} if host_${ROUTE_NAME}
+EOF
+  fi
+
+
 # Combine base config file + all backend files
-  sudo bash -c 'cat /etc/haproxy/haproxy.base /etc/haproxy/backends/*.cfg > /etc/haproxy/haproxy.cfg'
+  sudo bash -c 'cat /etc/haproxy/haproxy.base \
+                    /etc/haproxy/frontends/*.cfg \
+                    /etc/haproxy/backends/*.cfg \
+               > /etc/haproxy/haproxy.cfg'
 
   # Validate and reload
   if sudo haproxy -c -f /etc/haproxy/haproxy.cfg; then
@@ -75,7 +93,7 @@ fi
 
 
 # Enable the new one
-echo "add server ${BACKEND_NAME}/${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check" | sudo socat stdio $SOCKET || true
+echo "add server ${BACKEND_NAME}/${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check weight 100" | sudo socat stdio $SOCKET || true
 echo "enable server ${BACKEND_NAME}/${CONTAINER_NAME}" | sudo socat stdio $SOCKET
 
 
@@ -87,11 +105,8 @@ if [ -n "$OLD_SERVER" ]; then
   echo "set server ${BACKEND_NAME}/${OLD_SERVER} state maint" | sudo socat stdio "$SOCKET"
   echo "del server ${BACKEND_NAME}/${OLD_SERVER}" | sudo socat stdio "$SOCKET"
   sudo sed -i "/server ${OLD_SERVER}/d" "$BACKEND_FILE"
+  docker stop "${OLD_SERVER}" 2>/dev/null || true
+  docker rm "${OLD_SERVER}" 2>/dev/null || true
 fi
-
-# Stop old container
-docker stop "${OLD_SERVER}" 2>/dev/null || true
-docker rm "${OLD_SERVER}" 2>/dev/null || true
-
 
 echo "Deployment complete for $PROJECT_NAME — now serving on port $TARGET_PORT"

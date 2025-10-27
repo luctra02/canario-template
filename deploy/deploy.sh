@@ -3,10 +3,8 @@ set -e
 
 IMAGE_TAG=$1
 PROJECT_NAME=$2
-PORT_OLD=$3
-PORT_NEW=$4
-GITLAB_ACCESS_TOKEN=$5
-PROJECT_ID=$6
+GITLAB_ACCESS_TOKEN=$3
+PROJECT_ID=$4
 
 PROJECT_NAME=${PROJECT_NAME,,}
 CONTAINER_NAME="${PROJECT_NAME}-${IMAGE_TAG##*:}"
@@ -73,7 +71,6 @@ fi
 
 # Add the new server in the correct backends file
 if ! grep -q "$CONTAINER_NAME" "$BACKEND_FILE"; then
-  echo "Persisting new server to config file..."
   echo "    server ${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check" | sudo tee -a "$BACKEND_FILE" > /dev/null
 fi
 
@@ -90,7 +87,7 @@ if [ -n "$OLD_SERVER" ]; then
   echo "Disabling old server $OLD_SERVER..."
   echo "set server ${BACKEND_NAME}/${OLD_SERVER} state maint" | sudo socat stdio "$SOCKET"
   echo "del server ${BACKEND_NAME}/${OLD_SERVER}" | sudo socat stdio "$SOCKET"
-
+  sudo sed -i "/server ${OLD_SERVER}/d" "$BACKEND_FILE"
 fi
 
 # Stop old container

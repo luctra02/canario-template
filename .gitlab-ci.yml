@@ -1,56 +1,56 @@
 stages:
-  - build
-  - test
-  - push
-  - deploy
+    - build
+    - test
+    - push
+    - deploy
 
 variables:
-  IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+    IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
 
 # Build Docker Image
 build:
-  stage: build
-  script:
-    - echo "Building Docker image..."
-    - docker build -t $IMAGE_TAG .
-  only:
-    - main
+    stage: build
+    script:
+        - echo "Building Docker image..."
+        - docker build -t $IMAGE_TAG .
+    only:
+        - main
 
 # Test Container
 test:
-  stage: test
-  script:
-    - echo "Starting test container..."
-    - docker run -d --rm -P --name $CI_PROJECT_NAME $IMAGE_TAG
-    - sleep 5
-    - echo "Performing health check..."
-    - "PORT=$(docker port $CI_PROJECT_NAME 8080/tcp | cut -d: -f2)"
-    - curl -f http://localhost:$PORT || (echo "Health check failed!" && exit 1)
-  after_script:
-    - docker stop $CI_PROJECT_NAME || true
-  only:
-    - main
+    stage: test
+    script:
+        - echo "Starting test container..."
+        - docker run -d --rm -P --name $CI_PROJECT_NAME $IMAGE_TAG
+        - sleep 5
+        - echo "Performing health check..."
+        - "PORT=$(docker port $CI_PROJECT_NAME 8080/tcp | cut -d: -f2)"
+        - curl -f http://localhost:$PORT || (echo "Health check failed!" && exit 1)
+    after_script:
+        - docker stop $CI_PROJECT_NAME || true
+    only:
+        - main
 
 # Push to GitLab Registry
 push:
-  stage: push
-  script:
-    - echo "Logging into GitLab registry..."
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker push $IMAGE_TAG
-  only:
-    - main
+    stage: push
+    script:
+        - echo "Logging into GitLab registry..."
+        - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+        - docker push $IMAGE_TAG
+    only:
+        - main
 
 # Deploy to WebServer VM using deploy.sh script
 deploy:
-  stage: deploy
-  script:
-    - >
-      ssh -o StrictHostKeyChecking=no "${WEB_SERVER_USER}@${WEB_SERVER_IP}" "
-      bash -lc '
-      docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY} &&
-      cd ${CI_PROJECT_NAME}/deploy &&
-      sudo chmod +x deploy.sh &&
-      ./deploy.sh ${IMAGE_TAG} ${CI_PROJECT_NAME} ${PORT_OLD} ${PORT_NEW} ${GITLAB_ACCESS_TOKEN} ${PROJECT_ID}'"
-  only:
-    - main
+    stage: deploy
+    script:
+        - >
+            ssh -o StrictHostKeyChecking=no "${WEB_SERVER_USER}@${WEB_SERVER_IP}" "
+            bash -lc '
+            docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY} &&
+            cd ${CI_PROJECT_NAME}/deploy &&
+            sudo chmod +x deploy.sh &&
+            ./deploy.sh ${IMAGE_TAG} ${CI_PROJECT_NAME} ${GITLAB_ACCESS_TOKEN} ${PROJECT_ID}'"
+    only:
+        - main

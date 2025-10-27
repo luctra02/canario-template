@@ -57,18 +57,6 @@ backend ${BACKEND_NAME}
     balance roundrobin
     option httpchk GET /
 EOF
-fi
-
-OLD_SERVER=$(echo "show servers state" | sudo socat stdio $SOCKET \
-  | grep "${BACKEND_NAME}" | grep -v "${CONTAINER_NAME}" | awk '{print $4}' | head -n1)
-
-echo "server ${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check" | sudo tee -a "$BACKEND_FILE" > /dev/null
-
-if [ -n "$OLD_SERVER" ]; then
-  echo "Removing old server $OLD_SERVER from file..."
-  sudo sed -i "/server ${OLD_SERVER}/d" "$BACKEND_FILE"
-fi
-
 
 # Combine base config file + all backend files
   sudo bash -c 'cat /etc/haproxy/haproxy.base /etc/haproxy/backends/*.cfg > /etc/haproxy/haproxy.cfg'
@@ -81,11 +69,33 @@ fi
     echo "Invalid HAProxy config. Aborting reload."
     exit 1
   fi
+fi
+
+# Add the new server in the correct backends file
+if ! grep -q "$CONTAINER_NAME" "$BACKEND_FILE"; then
+  echo "Persisting new server to config file..."
+  echo "    server ${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check" | sudo tee -a "$BACKEND_FILE" > /dev/null
+fi
+
+
+# Enable the new one
+echo "add server ${BACKEND_NAME}/${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check weight 100" | sudo socat stdio $SOCKET || true
+echo "enable server ${BACKEND_NAME}/${CONTAINER_NAME}" | sudo socat stdio $SOCKET
+
+
+# Optionally disable the previous version
+OLD_SERVER=$(echo "show servers state" | sudo socat stdio $SOCKET \
+  | grep "${BACKEND_NAME}" | grep -v "${CONTAINER_NAME}" | awk '{print $4}' | head -n1)
+if [ -n "$OLD_SERVER" ]; then
+  echo "Disabling old server $OLD_SERVER..."
+  echo "set server ${BACKEND_NAME}/${OLD_SERVER} state maint" | sudo socat stdio "$SOCKET"
+  echo "del server ${BACKEND_NAME}/${OLD_SERVER}" | sudo socat stdio "$SOCKET"
+
+fi
 
 # Stop old container
-docker stop ${OLD_SERVER} 2>/dev/null || true
-docker rm ${OLD_SERVER} 2>/dev/null || true
-
+docker stop "${OLD_SERVER}" 2>/dev/null || true
+docker rm "${OLD_SERVER}" 2>/dev/null || true
 
 
 echo "Deployment complete for $PROJECT_NAME — now serving on port $TARGET_PORT"

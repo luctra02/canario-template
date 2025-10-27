@@ -14,7 +14,6 @@ if docker ps --format '{{.Names}}' | grep -q "$CONTAINER_NAME"; then
   exit 0
 fi
 
-echo "Deploying $PROJECT_NAME using old port $PORT_OLD and new port $PORT_NEW..."
 
 # Pull the latest image
 docker pull "$IMAGE_TAG"

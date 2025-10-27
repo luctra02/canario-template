@@ -53,6 +53,7 @@ backend ${BACKEND_NAME}
     mode http
     balance roundrobin
     option httpchk GET /
+    http-request set-path %[path,regsub(^/${PROJECT_NAME},,)]
 EOF
 
   # Create HAProxy frontend rule if missing
@@ -64,8 +65,8 @@ EOF
     echo "No HAProxy frontend rule found for $PROJECT_NAME. Creating one..."
     sudo mkdir -p "$FRONTENDS_DIR"
     sudo bash -c "cat > $FRONTEND_FILE" <<EOF
-    acl host_${ROUTE_NAME} hdr_beg(host) ${ROUTE_NAME}.
-    use_backend ${BACKEND_NAME} if host_${ROUTE_NAME}
+    acl path_${ROUTE_NAME} path_beg /${ROUTE_NAME}
+    use_backend ${BACKEND_NAME} if path_${ROUTE_NAME}
 EOF
   fi
 

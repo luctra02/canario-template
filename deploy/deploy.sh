@@ -70,12 +70,12 @@ fi
 
 # Add the new server in the correct backends file
 if ! grep -q "$CONTAINER_NAME" "$BACKEND_FILE"; then
-  echo "    server ${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check" | sudo tee -a "$BACKEND_FILE" > /dev/null
+  echo "    server ${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check inter 5s fall 3 rise 2" | sudo tee -a "$BACKEND_FILE" > /dev/null
 fi
 
 
 # Enable the new one
-echo "add server ${BACKEND_NAME}/${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check weight 100" | sudo socat stdio $SOCKET || true
+echo "add server ${BACKEND_NAME}/${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check inter 5s fall 3 rise 2" | sudo socat stdio $SOCKET || true
 echo "enable server ${BACKEND_NAME}/${CONTAINER_NAME}" | sudo socat stdio $SOCKET
 
 

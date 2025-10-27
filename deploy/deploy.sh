@@ -53,7 +53,7 @@ backend ${BACKEND_NAME}
     mode http
     balance roundrobin
     option httpchk GET /
-    http-request set-path %[path,regsub(^/${PROJECT_NAME},,)]
+    http-request replace-path ^/${PROJECT_NAME}/?(.*)$ /\1
 EOF
 
   # Create HAProxy frontend rule if missing
@@ -89,12 +89,12 @@ fi
 
 # Add the new server in the correct backends file
 if ! grep -q "$CONTAINER_NAME" "$BACKEND_FILE"; then
-  echo "    server ${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check" | sudo tee -a "$BACKEND_FILE" > /dev/null
+  echo "    server ${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check inter 5s rise 1 fall 2" | sudo tee -a "$BACKEND_FILE" > /dev/null
 fi
 
 
 # Enable the new one
-echo "add server ${BACKEND_NAME}/${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check weight 100" | sudo socat stdio $SOCKET || true
+echo "add server ${BACKEND_NAME}/${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check inter 5s rise 1 fall 2 weight 100" | sudo socat stdio $SOCKET || true
 echo "enable server ${BACKEND_NAME}/${CONTAINER_NAME}" | sudo socat stdio $SOCKET
 
 

@@ -56,7 +56,6 @@ backend ${BACKEND_NAME}
     mode http
     balance roundrobin
     option httpchk GET /
-    server placeholder 127.0.0.1:1 disabled
 EOF
 
   # Combine base config file + all backend files
@@ -72,6 +71,11 @@ EOF
   fi
 fi
 
+# Add the new server in the correct backends file
+if ! grep -q "$CONTAINER_NAME" "$BACKEND_FILE"; then
+  echo "Persisting new server to config file..."
+  echo "    server ${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check" | sudo tee -a "$BACKEND_FILE" > /dev/null
+fi
 
 
 # Enable the new one

@@ -6,6 +6,7 @@ stages:
 
 variables:
     IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+    DEPLOY_MODE: "standard" #change to "canary" for canary release
 
 # Build Docker Image
 build:
@@ -51,6 +52,6 @@ deploy:
             docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY} &&
             cd ${CI_PROJECT_NAME}/deploy &&
             sudo chmod +x deploy.sh &&
-            ./deploy.sh ${IMAGE_TAG} ${CI_PROJECT_NAME} ${GITLAB_ACCESS_TOKEN} ${PROJECT_ID} ${ROUTE_NAME}'"
+            ./deploy.sh ${DEPLOY_MODE} ${IMAGE_TAG} ${CI_PROJECT_NAME} ${GITLAB_ACCESS_TOKEN} ${PROJECT_ID} ${ROUTE_NAME}'"
     only:
         - main

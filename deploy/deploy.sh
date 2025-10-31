@@ -1,10 +1,12 @@
 #!/bin/bash
 set -e
 
-IMAGE_TAG=$1
-PROJECT_NAME=$2
-GITLAB_ACCESS_TOKEN=$3
-PROJECT_ID=$4
+MODE=${1:-standard}
+MODE=${MODE,,} 
+IMAGE_TAG=$2
+PROJECT_NAME=$3
+GITLAB_ACCESS_TOKEN=$4
+PROJECT_ID=$5
 
 PROJECT_NAME=${PROJECT_NAME,,}
 CONTAINER_NAME="${PROJECT_NAME}-${IMAGE_TAG##*:}"
@@ -13,6 +15,8 @@ if docker ps --format '{{.Names}}' | grep -q "$CONTAINER_NAME"; then
   echo "Version $IMAGE_TAG is already deployed and running. Skipping redeploy."
   exit 0
 fi
+
+echo "Deploying $PROJECT_NAME using $MODE strategy"
 
 
 # Pull the latest image
@@ -57,7 +61,7 @@ backend ${BACKEND_NAME}
 EOF
 
   # Create HAProxy frontend rule if missing
-  ROUTE_NAME=${5:-$PROJECT_NAME}
+  ROUTE_NAME=${6:-$PROJECT_NAME}
   FRONTENDS_DIR="/etc/haproxy/frontends"
   FRONTEND_FILE="${FRONTENDS_DIR}/${PROJECT_NAME}.cfg"
 
@@ -93,25 +97,39 @@ fi
 
 # Add the new server in the correct backends file
 if ! grep -q "$CONTAINER_NAME" "$BACKEND_FILE"; then
-  echo "    server ${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check inter 5s rise 1 fall 2" | sudo tee -a "$BACKEND_FILE" > /dev/null
+  echo "    server ${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check" | sudo tee -a "$BACKEND_FILE" > /dev/null
 fi
 
-
-# Enable the new one
-echo "add server ${BACKEND_NAME}/${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check inter 5s rise 1 fall 2 weight 100" | sudo socat stdio $SOCKET || true
-echo "enable server ${BACKEND_NAME}/${CONTAINER_NAME}" | sudo socat stdio $SOCKET
-
-
-# Delete old server from HAProxy and config if it exists
+# Check if old server exists
 OLD_SERVER=$(echo "show servers state" | sudo socat stdio $SOCKET \
   | grep "${BACKEND_NAME}" | grep -v "${CONTAINER_NAME}" | awk '{print $4}' | head -n1)
-if [ -n "$OLD_SERVER" ]; then
-  echo "Disabling old server $OLD_SERVER..."
-  echo "set server ${BACKEND_NAME}/${OLD_SERVER} state maint" | sudo socat stdio "$SOCKET"
-  echo "del server ${BACKEND_NAME}/${OLD_SERVER}" | sudo socat stdio "$SOCKET"
-  sudo sed -i "/server ${OLD_SERVER}/d" "$BACKEND_FILE"
-  docker stop "${OLD_SERVER}" 2>/dev/null || true
-  docker rm "${OLD_SERVER}" 2>/dev/null || true
+
+#Canary deployment
+if [ "$MODE" = "canary" ] && [ -n "$OLD_SERVER" ]; then
+
+  echo "Triggering background progressive rollout..."
+  echo "add server ${BACKEND_NAME}/${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check weight 10" | sudo socat stdio $SOCKET
+  echo "enable server ${BACKEND_NAME}/${CONTAINER_NAME}" | sudo socat stdio $SOCKET
+  echo "set server ${BACKEND_NAME}/${OLD_SERVER} weight 90" | sudo socat stdio $SOCKET
+  nohup bash /home/ubuntu/canario-template/deploy/canary-progressive.sh \
+    "$BACKEND_NAME" "$CONTAINER_NAME" "$OLD_SERVER" > /var/log/${PROJECT_NAME}_canary.log 2>&1 &
+
+  echo "Canary rollout started in background, pipeline will now exit."
+  exit 0
+
+# Standard deployment
+else
+  echo "add server ${BACKEND_NAME}/${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check weight 100" | sudo socat stdio $SOCKET
+  echo "enable server ${BACKEND_NAME}/${CONTAINER_NAME}" | sudo socat stdio $SOCKET
+
+  if [ -n "$OLD_SERVER" ]; then
+    echo "Removing old server $OLD_SERVER..."
+    echo "set server ${BACKEND_NAME}/${OLD_SERVER} state maint" | sudo socat stdio $SOCKET
+    echo "del server ${BACKEND_NAME}/${OLD_SERVER}" | sudo socat stdio $SOCKET
+    sudo sed -i "/server ${OLD_SERVER}/d" "$BACKEND_FILE"
+    docker stop "${OLD_SERVER}" 2>/dev/null || true
+    docker rm "${OLD_SERVER}" 2>/dev/null || true
+  fi
 fi
 
 echo "Deployment complete for $PROJECT_NAME — now serving on port $TARGET_PORT"

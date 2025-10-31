@@ -111,7 +111,7 @@ if [ "$MODE" = "canary" ] && [ -n "$OLD_SERVER" ]; then
   echo "add server ${BACKEND_NAME}/${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check weight 10" | sudo socat stdio $SOCKET
   echo "enable server ${BACKEND_NAME}/${CONTAINER_NAME}" | sudo socat stdio $SOCKET
   echo "set server ${BACKEND_NAME}/${OLD_SERVER} weight 90" | sudo socat stdio $SOCKET
-  nohup bash /home/ubuntu/canario-template/deploy/canary-progressive.sh \
+  nohup bash /home/ubuntu/canario-template/deploy/canary-deploy.sh \
     "$BACKEND_NAME" "$CONTAINER_NAME" "$OLD_SERVER" > /var/log/${PROJECT_NAME}_canary.log 2>&1 &
 
   echo "Canary rollout started in background, pipeline will now exit."

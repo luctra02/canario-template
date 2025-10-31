@@ -95,14 +95,15 @@ EOF
   flock -u 9
 fi
 
-# Add the new server in the correct backends file
-if ! grep -q "$CONTAINER_NAME" "$BACKEND_FILE"; then
-  echo "    server ${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check weight 100" | sudo tee -a "$BACKEND_FILE" > /dev/null
-fi
-
 # Check if old server exists
 OLD_SERVER=$(echo "show servers state" | sudo socat stdio $SOCKET \
   | grep "${BACKEND_NAME}" | grep -v "${CONTAINER_NAME}" | awk '{print $4}' | head -n1)
+
+# Add the new server in the correct backends file
+if ! grep -q "$CONTAINER_NAME" "$BACKEND_FILE"; then
+  echo "    server ${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check" | sudo tee -a "$BACKEND_FILE" > /dev/null
+  sudo sed -i "/server ${OLD_SERVER}/d" "$BACKEND_FILE"
+fi
 
 #Canary deployment
 if [ "$MODE" = "canary" ] && [ -n "$OLD_SERVER" ]; then
@@ -112,7 +113,8 @@ if [ "$MODE" = "canary" ] && [ -n "$OLD_SERVER" ]; then
   echo "enable server ${BACKEND_NAME}/${CONTAINER_NAME}" | sudo socat stdio $SOCKET
   echo "set server ${BACKEND_NAME}/${OLD_SERVER} weight 90" | sudo socat stdio $SOCKET
   nohup bash /home/ubuntu/canario-template/deploy/canary-deploy.sh \
-    "$BACKEND_NAME" "$CONTAINER_NAME" "$OLD_SERVER" > /var/log/${PROJECT_NAME}_canary.log 2>&1 &
+  "$BACKEND_NAME" "$CONTAINER_NAME" "$OLD_SERVER" "$PROJECT_NAME" > /home/ubuntu/logs/${PROJECT_NAME}_canary.log 2>&1 &
+
 
   echo "Canary rollout started in background, pipeline will now exit."
   exit 0
@@ -126,7 +128,6 @@ else
     echo "Removing old server $OLD_SERVER..."
     echo "set server ${BACKEND_NAME}/${OLD_SERVER} state maint" | sudo socat stdio $SOCKET
     echo "del server ${BACKEND_NAME}/${OLD_SERVER}" | sudo socat stdio $SOCKET
-    sudo sed -i "/server ${OLD_SERVER}/d" "$BACKEND_FILE"
     docker stop "${OLD_SERVER}" 2>/dev/null || true
     docker rm "${OLD_SERVER}" 2>/dev/null || true
   fi

@@ -4,8 +4,9 @@ set -e
 BACKEND_NAME=$1
 NEW_SERVER=$2
 OLD_SERVER=$3
+PROJECT_NAME=$4
 SOCKET="/run/haproxy/admin.sock"
-LOG_FILE="/var/log/${BACKEND_NAME}_canary.log"
+LOG_FILE="/home/ubuntu/logs/${PROJECT_NAME}_canary.log"
 
 echo "[$(date)] Starting background canary rollout for ${BACKEND_NAME}" | tee -a "$LOG_FILE"
 

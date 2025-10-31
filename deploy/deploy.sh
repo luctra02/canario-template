@@ -97,7 +97,7 @@ fi
 
 # Add the new server in the correct backends file
 if ! grep -q "$CONTAINER_NAME" "$BACKEND_FILE"; then
-  echo "    server ${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check" | sudo tee -a "$BACKEND_FILE" > /dev/null
+  echo "    server ${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check weight 100" | sudo tee -a "$BACKEND_FILE" > /dev/null
 fi
 
 # Check if old server exists

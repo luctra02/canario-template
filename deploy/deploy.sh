@@ -70,7 +70,9 @@ EOF
 EOF
   fi
 
-
+  LOCKFILE="/tmp/haproxy_config.lock"
+  exec 9>$LOCKFILE
+  flock -n 9 || { echo "Another deployment is updating HAProxy config. Waiting..."; flock 9; }
 # Combine base config file + all backend files
   sudo bash -c 'cat /etc/haproxy/haproxy.base \
                     /etc/haproxy/frontends/*.cfg \
@@ -83,8 +85,10 @@ EOF
     sudo systemctl reload haproxy
   else
     echo "Invalid HAProxy config. Aborting reload."
+    flock -u 9
     exit 1
   fi
+  flock -u 9
 fi
 
 # Add the new server in the correct backends file

@@ -6,7 +6,7 @@ stages:
 
 variables:
     IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
-    DEPLOY_MODE: "standard" #change to "canary" for canary release or "standard" for blue-green deployment
+    DEPLOY_MODE: "canary" #change to "canary" for canary release or "standard" for blue-green deployment
 
 # Build Docker Image
 build:

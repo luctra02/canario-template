@@ -48,6 +48,7 @@ BACKENDS_DIR="/etc/haproxy/backends"
 BACKEND_FILE="${BACKENDS_DIR}/${PROJECT_NAME}.cfg"
 SOCKET="/run/haproxy/admin.sock"
 BACKEND_NAME="${PROJECT_NAME}_backend"
+ROUTE_NAME=${6:-$PROJECT_NAME}
 
 if [ ! -f "$BACKEND_FILE" ]; then
   echo "No HAProxy backend found for $PROJECT_NAME. Creating one..."
@@ -57,11 +58,10 @@ backend ${BACKEND_NAME}
     mode http
     balance roundrobin
     option httpchk GET /
-    http-request replace-path ^/${PROJECT_NAME}/?(.*)$ /\1
+    http-request replace-path ^/${ROUTE_NAME}/?(.*)$ /\1
 EOF
 
   # Create HAProxy frontend rule if missing
-  ROUTE_NAME=${6:-$PROJECT_NAME}
   FRONTENDS_DIR="/etc/haproxy/frontends"
   FRONTEND_FILE="${FRONTENDS_DIR}/${PROJECT_NAME}.cfg"
 

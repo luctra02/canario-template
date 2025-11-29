@@ -108,7 +108,7 @@ fi
 #Canary deployment
 if [ "$MODE" = "canary" ] && [ -n "$OLD_SERVER" ]; then
 
-  echo "Triggering background progressive rollout..."
+  echo "Starting canary deployment for $PROJECT_NAME..."
   echo "add server ${BACKEND_NAME}/${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check weight 10" | sudo socat stdio $SOCKET
   echo "enable server ${BACKEND_NAME}/${CONTAINER_NAME}" | sudo socat stdio $SOCKET
   echo "set server ${BACKEND_NAME}/${OLD_SERVER} weight 90" | sudo socat stdio $SOCKET

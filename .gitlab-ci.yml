@@ -6,7 +6,12 @@ stages:
 
 variables:
     IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
-    DEPLOY_MODE: "standard" #change to "canary" for canary release or "standard" for blue-green deployment
+    #These variables can be overridden in the CI/CD settings of your project
+    DEPLOY_MODE: "standard"   
+    ROUTE_NAME: $CI_PROJECT_NAME
+    PROJECT_ID: $CI_PROJECT_ID  
+    WEB_SERVER_IP: "192.168.47.100"
+    WEB_SERVER_USER: "ubuntu"
 
 # Build Docker Image
 build:
@@ -42,7 +47,7 @@ push:
     only:
         - main
 
-# Deploy to WebServer VM using deploy.sh script
+# Deploy to WebServer VM
 deploy:
     stage: deploy
     script:

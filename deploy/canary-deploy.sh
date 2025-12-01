@@ -7,12 +7,10 @@ OLD_SERVER=$3
 PROJECT_NAME=$4
 NEW_PORT=$5
 OLD_PORT=$6
-SOCKET="/run/haproxy/admin.sock"
-LOG_FILE="/home/ubuntu/logs/${PROJECT_NAME}_canary.log"
-BACKEND_FILE="/etc/haproxy/backends/${PROJECT_NAME}.cfg"
+SOCKET=$7
+BACKEND_FILE=$8
 
-echo "[$(date)] Starting background canary rollout for ${BACKEND_NAME}" | tee -a "$LOG_FILE"
-echo "[$(date)] Initial traffic split: new=10%, old=90%" | tee -a "$LOG_FILE"
+LOG_FILE="/home/ubuntu/logs/${PROJECT_NAME}_canary.log"
 
 # Lock file to ensure only one canary rollout runs at a time for this project
 LOCKFILE="/tmp/${PROJECT_NAME}_canary.lock"
@@ -20,8 +18,29 @@ exec 9>"$LOCKFILE"
 flock -n 9 || { echo "[$(date)] Another canary rollout is already running for ${PROJECT_NAME}. Waiting..." | tee -a "$LOG_FILE"; flock 9; }
 echo "[$(date)] Lock acquired for canary rollout." | tee -a "$LOG_FILE"
 
+# Apply live HAProxy commands
+  echo "add server ${BACKEND_NAME}/${NEW_SERVER} 127.0.0.1:${NEW_PORT} check" | sudo socat stdio $SOCKET
+  echo "enable server ${BACKEND_NAME}/${NEW_SERVER}" | sudo socat stdio $SOCKET
+  echo "set server ${BACKEND_NAME}/${OLD_SERVER} weight 100" | sudo socat stdio $SOCKET
+
+# Update old server weight
+  if ! grep -q "server ${OLD_SERVER} " "$BACKEND_FILE"; then
+  echo "    server ${OLD_SERVER} 127.0.0.1:${OLD_PORT} check weight 100" \
+    | sudo tee -a "$BACKEND_FILE" > /dev/null
+  else
+    sudo sed -i "s/^ *server ${OLD_SERVER} .*/    server ${OLD_SERVER} 127.0.0.1:${OLD_PORT} check weight 100/" "$BACKEND_FILE"
+  fi
+
+  # Add new server to backend config
+  if ! grep -q "server ${NEW_SERVER} " "$BACKEND_FILE"; then
+    echo "    server ${NEW_SERVER} 127.0.0.1:${NEW_PORT} check" \
+      | sudo tee -a "$BACKEND_FILE" > /dev/null
+  else
+    sudo sed -i "s/^ *server ${NEW_SERVER} .*/    server ${NEW_SERVER} 127.0.0.1:${NEW_PORT} check/" "$BACKEND_FILE"
+  fi
+
 # Rollout stages % weight for new server
-STAGES=(30 60 100)
+STAGES=(10 30 60 100)
 SLEEP_DURATION=60   # time to wait between stages in seconds
 
 for WEIGHT in "${STAGES[@]}"; do

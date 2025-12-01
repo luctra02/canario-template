@@ -3,4 +3,4 @@ include:
     ref: main
     file: 'pipeline/canario-template-ci.yml'
 variables:
-  DEPLOY_MODE: "standard" # Change to canary for canary deployments
+  DEPLOY_MODE: "canary" # Change to "canary" for canary deployments

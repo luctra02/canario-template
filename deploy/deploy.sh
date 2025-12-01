@@ -147,7 +147,7 @@ else
   echo "    server ${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check cookie ${CONTAINER_NAME}" \
     | sudo tee -a "$BACKEND_FILE" > /dev/null
   sudo sed -i "/server ${OLD_SERVER}/d" "$BACKEND_FILE"
-fi
+  fi
 
   echo "add server ${BACKEND_NAME}/${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check cookie ${CONTAINER_NAME} weight 100" | sudo socat stdio $SOCKET
   echo "enable server ${BACKEND_NAME}/${CONTAINER_NAME}" | sudo socat stdio $SOCKET

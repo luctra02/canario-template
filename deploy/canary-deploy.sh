@@ -35,8 +35,8 @@ for WEIGHT in "${STAGES[@]}"; do
   echo "set server ${BACKEND_NAME}/${OLD_SERVER} weight ${OLD_WEIGHT}" | sudo socat stdio $SOCKET
 
   # Adjust weights in backend file
-  sudo sed -i "s/^ *server ${NEW_SERVER} .*/    server ${NEW_SERVER} 127.0.0.1:${NEW_PORT} check weight ${NEW_WEIGHT}/" "$BACKEND_FILE"
-  sudo sed -i "s/^ *server ${OLD_SERVER} .*/    server ${OLD_SERVER} 127.0.0.1:${OLD_PORT} check weight ${OLD_WEIGHT}/" "$BACKEND_FILE"
+  sudo sed -i "s/^ *server ${NEW_SERVER} .*/    server ${NEW_SERVER} 127.0.0.1:${NEW_PORT} check cookie ${NEW_SERVER} weight ${NEW_WEIGHT}/" "$BACKEND_FILE"
+  sudo sed -i "s/^ *server ${OLD_SERVER} .*/    server ${OLD_SERVER} 127.0.0.1:${OLD_PORT} check cookie ${OLD_SERVER} weight ${OLD_WEIGHT}/" "$BACKEND_FILE"
 
 
   sleep $SLEEP_DURATION

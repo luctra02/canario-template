@@ -1,4 +1,4 @@
-# --- Stage 1: Build Node image ---
+# Build Node image
 FROM node:20-alpine
 
 WORKDIR /app

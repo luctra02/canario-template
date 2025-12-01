@@ -99,28 +99,54 @@ fi
 OLD_SERVER=$(echo "show servers state" | sudo socat stdio $SOCKET \
   | grep "${BACKEND_NAME}" | grep -v "${CONTAINER_NAME}" | awk '{print $4}' | head -n1)
 
-# Add the new server in the correct backends file
-if ! grep -q "$CONTAINER_NAME" "$BACKEND_FILE"; then
-  echo "    server ${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check" | sudo tee -a "$BACKEND_FILE" > /dev/null
-  sudo sed -i "/server ${OLD_SERVER}/d" "$BACKEND_FILE"
-fi
-
-#Canary deployment
+# Canary deployment
 if [ "$MODE" = "canary" ] && [ -n "$OLD_SERVER" ]; then
 
   echo "Starting canary deployment for $PROJECT_NAME..."
+
+  # Determine port of old server
+  if [ -n "$OLD_SERVER" ]; then
+    OLD_PORT=$(echo "show servers state" | sudo socat stdio $SOCKET \
+      | grep "${BACKEND_NAME}" | grep "${OLD_SERVER}" | awk '{print $5}' | cut -d: -f2)
+  fi
+
+  # Add new server to backend config
+  if ! grep -q "server ${CONTAINER_NAME} " "$BACKEND_FILE"; then
+  echo "    server ${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check weight 10" \
+    | sudo tee -a "$BACKEND_FILE" > /dev/null
+  else
+    sudo sed -i "s/^ *server ${CONTAINER_NAME} .*/    server ${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check weight 10/" "$BACKEND_FILE"
+  fi
+
+  # Update old server weight to 90
+  if ! grep -q "server ${OLD_SERVER} " "$BACKEND_FILE"; then
+  echo "    server ${OLD_SERVER} 127.0.0.1:${OLD_PORT} check weight 90" \
+    | sudo tee -a "$BACKEND_FILE" > /dev/null
+  else
+    sudo sed -i "s/^ *server ${OLD_SERVER} .*/    server ${OLD_SERVER} 127.0.0.1:${OLD_PORT} check weight 90/" "$BACKEND_FILE"
+  fi
+
+  # Apply live HAProxy commands
   echo "add server ${BACKEND_NAME}/${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check weight 10" | sudo socat stdio $SOCKET
   echo "enable server ${BACKEND_NAME}/${CONTAINER_NAME}" | sudo socat stdio $SOCKET
   echo "set server ${BACKEND_NAME}/${OLD_SERVER} weight 90" | sudo socat stdio $SOCKET
-  nohup bash /home/ubuntu/canario-template/deploy/canary-deploy.sh \
-  "$BACKEND_NAME" "$CONTAINER_NAME" "$OLD_SERVER" "$PROJECT_NAME" > /home/ubuntu/logs/${PROJECT_NAME}_canary.log 2>&1 &
 
+  # Start background canary rollout
+  nohup bash /home/ubuntu/canario-template/deploy/canary-deploy.sh \
+    "$BACKEND_NAME" "$CONTAINER_NAME" "$OLD_SERVER" "$PROJECT_NAME" "$TARGET_PORT" "$OLD_PORT" \
+    > /home/ubuntu/logs/${PROJECT_NAME}_canary.log 2>&1 &
 
   echo "Canary rollout started in background, pipeline will now exit."
   exit 0
 
 # Standard deployment
 else
+    # Add the new server in the correct backends file
+  if ! grep -q "$CONTAINER_NAME" "$BACKEND_FILE"; then
+    echo "    server ${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check" | sudo tee -a "$BACKEND_FILE" > /dev/null
+    sudo sed -i "/server ${OLD_SERVER}/d" "$BACKEND_FILE"
+  fi
+
   echo "add server ${BACKEND_NAME}/${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check weight 100" | sudo socat stdio $SOCKET
   echo "enable server ${BACKEND_NAME}/${CONTAINER_NAME}" | sudo socat stdio $SOCKET
 

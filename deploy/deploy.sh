@@ -58,6 +58,7 @@ backend ${BACKEND_NAME}
     mode http
     balance roundrobin
     option httpchk GET /
+    cookie SRV insert indirect nocache
     http-request replace-path ^/${ROUTE_NAME}/?(.*)$ /\1
 EOF
 
@@ -112,22 +113,22 @@ if [ "$MODE" = "canary" ] && [ -n "$OLD_SERVER" ]; then
 
   # Add new server to backend config
   if ! grep -q "server ${CONTAINER_NAME} " "$BACKEND_FILE"; then
-  echo "    server ${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check weight 10" \
-    | sudo tee -a "$BACKEND_FILE" > /dev/null
+    echo "    server ${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check cookie ${CONTAINER_NAME} weight 10" \
+      | sudo tee -a "$BACKEND_FILE" > /dev/null
   else
-    sudo sed -i "s/^ *server ${CONTAINER_NAME} .*/    server ${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check weight 10/" "$BACKEND_FILE"
+    sudo sed -i "s/^ *server ${CONTAINER_NAME} .*/    server ${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check cookie ${CONTAINER_NAME} weight 10/" "$BACKEND_FILE"
   fi
 
   # Update old server weight to 90
   if ! grep -q "server ${OLD_SERVER} " "$BACKEND_FILE"; then
-  echo "    server ${OLD_SERVER} 127.0.0.1:${OLD_PORT} check weight 90" \
+  echo "    server ${OLD_SERVER} 127.0.0.1:${OLD_PORT} check cookie ${OLD_SERVER} weight 90" \
     | sudo tee -a "$BACKEND_FILE" > /dev/null
   else
-    sudo sed -i "s/^ *server ${OLD_SERVER} .*/    server ${OLD_SERVER} 127.0.0.1:${OLD_PORT} check weight 90/" "$BACKEND_FILE"
+    sudo sed -i "s/^ *server ${OLD_SERVER} .*/    server ${OLD_SERVER} 127.0.0.1:${OLD_PORT} check cookie ${OLD_SERVER} weight 90/" "$BACKEND_FILE"
   fi
 
   # Apply live HAProxy commands
-  echo "add server ${BACKEND_NAME}/${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check weight 10" | sudo socat stdio $SOCKET
+  echo "add server ${BACKEND_NAME}/${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check cookie ${CONTAINER_NAME} weight 10" | sudo socat stdio $SOCKET
   echo "enable server ${BACKEND_NAME}/${CONTAINER_NAME}" | sudo socat stdio $SOCKET
   echo "set server ${BACKEND_NAME}/${OLD_SERVER} weight 90" | sudo socat stdio $SOCKET
 
@@ -143,11 +144,12 @@ if [ "$MODE" = "canary" ] && [ -n "$OLD_SERVER" ]; then
 else
     # Add the new server in the correct backends file
   if ! grep -q "$CONTAINER_NAME" "$BACKEND_FILE"; then
-    echo "    server ${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check" | sudo tee -a "$BACKEND_FILE" > /dev/null
-    sudo sed -i "/server ${OLD_SERVER}/d" "$BACKEND_FILE"
+  echo "    server ${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check cookie ${CONTAINER_NAME}" \
+    | sudo tee -a "$BACKEND_FILE" > /dev/null
+  sudo sed -i "/server ${OLD_SERVER}/d" "$BACKEND_FILE"
   fi
 
-  echo "add server ${BACKEND_NAME}/${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check weight 100" | sudo socat stdio $SOCKET
+  echo "add server ${BACKEND_NAME}/${CONTAINER_NAME} 127.0.0.1:${TARGET_PORT} check cookie ${CONTAINER_NAME} weight 100" | sudo socat stdio $SOCKET
   echo "enable server ${BACKEND_NAME}/${CONTAINER_NAME}" | sudo socat stdio $SOCKET
 
   if [ -n "$OLD_SERVER" ]; then

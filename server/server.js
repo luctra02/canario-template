@@ -1,5 +1,9 @@
 import express from "express";
 import fetch from "node-fetch";
+import dotenv from "dotenv";
+
+// Load environment variables from .env file if it exists (for local development)
+dotenv.config();
 
 const app = express();
 const { GITLAB_ACCESS_TOKEN, PROJECT_ID } = process.env;

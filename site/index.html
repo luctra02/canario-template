@@ -3,24 +3,30 @@
   <head>
     <meta charset="UTF-8" />
     <title>Canario Template</title>
-    <link rel="stylesheet" href="styles.css" />
+    <link id="css-link" rel="stylesheet">
   </head>
   <body>
     <div class="container">
       <h1>Welcome to Canario!</h1>
-      <h3>test change 53</h3>
+      <h3>test change 55</h3>
       <p id="flag-status">Checking feature flag...</p>
       <button onclick="checkFeatureFlag()">Refresh Flag</button>
     </div>
 
     <script>
+      // Dynamically set CSS path based on current location
+      const basePath = window.location.pathname.replace(/\/$/, "");
+      document.getElementById("css-link").href = basePath + "/styles.css";
       const FEATURE_FLAG_NAME = "flag1";
 
       async function checkFeatureFlag() {
         const status = document.getElementById("flag-status");
 
         try {
-          const res = await fetch("/flags", { cache: "no-store" });
+          // Use current path to construct correct flags endpoint
+          // This ensures each project fetches its own flags via HAProxy routing
+          const flagsPath = window.location.pathname.replace(/\/$/, "") + "/flags";
+          const res = await fetch(flagsPath, { cache: "no-store" });
           if (!res.ok) throw new Error("Flag proxy error");
 
           const data = await res.json();

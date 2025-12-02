@@ -47,7 +47,13 @@ canario-template/
 
 ### Prerequisites
 
-1. **GitLab Project Variables** (configure in CI/CD Settings):
+1. **GitLab Runner Configuration**:
+
+    - Go to Settings → CI/CD → Runners
+    - Select a runner (VM) for your project
+    - The pipeline requires a runner with Docker support
+
+2. **GitLab Project Variables** (configure in CI/CD Settings):
 
     - `GITLAB_ACCESS_TOKEN`: Personal access token with `api` scope
     - `DEPLOY_MODE`: Set to `"standard"` or `"canary"` (default: `"standard"`)
@@ -55,7 +61,7 @@ canario-template/
     - `WEB_SERVER_IP`: Target deployment server IP
     - `WEB_SERVER_USER`: SSH user for deployment
 
-2. **GitLab Feature Flags**:
+3. **GitLab Feature Flags**:
     - Create feature flags in your GitLab repository under Deploy → Feature Flags
     - Flags can be toggled without rebuilding containers
 
@@ -79,9 +85,30 @@ canario-template/
 ### Using This Template
 
 1. **Fork/Copy** this template repository for each customer website
-2. **Update** the site content with customer-specific design
-3. **Configure** GitLab CI/CD variables and feature flags
-4. **Push to main branch** to trigger automated deployment
+2. **Select a runner** in Settings → CI/CD → Runners
+3. **Update** the site content with customer-specific design
+4. **Configure** GitLab CI/CD variables and feature flags
+5. **Push to main branch** to trigger automated deployment
+
+### Host webpage locally
+
+1. Install dependencies (from the project root):
+
+    npm install express node-fetch
+
+2. Set environment variables in your shell:
+
+    set PROJECT_ID=<your_gitlab_project_id>
+
+    set GITLAB_ACCESS_TOKEN=<your_access_token>
+
+    (Use `export` instead of `set` on macOS/Linux.)
+
+3. Start the server:
+
+    node server/server.js
+
+4. Open `http://localhost:8080` in your browser.
 
 ## How It Works
 

@@ -94,15 +94,30 @@ canario-template/
 
 1. Install dependencies (from the project root):
 
-    npm install express node-fetch
+    npm install
 
-2. Set environment variables in your shell:
+2. Create a `.env` file in the project root with:
 
-    set PROJECT_ID=<your_gitlab_project_id>
+    ```
+    PROJECT_ID=your_gitlab_project_id
+    GITLAB_ACCESS_TOKEN=your_access_token
+    ```
 
-    set GITLAB_ACCESS_TOKEN=<your_access_token>
+    Alternatively, you can set environment variables in your shell:
 
-    (Use `export` instead of `set` on macOS/Linux.)
+    **Windows PowerShell:**
+
+    ```powershell
+    $env:PROJECT_ID="your_gitlab_project_id"
+    $env:GITLAB_ACCESS_TOKEN="your_access_token"
+    ```
+
+    **macOS/Linux:**
+
+    ```bash
+    export PROJECT_ID=your_gitlab_project_id
+    export GITLAB_ACCESS_TOKEN=your_access_token
+    ```
 
 3. Start the server:
 

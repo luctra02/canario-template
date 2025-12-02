@@ -3,14 +3,13 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+# Copy package files and install dependencies
+COPY package.json ./
+RUN npm install --production
+
 # Copy backend logic and static files
 COPY server/server.js .
 COPY site ./site
-
-# Install dependencies
-RUN npm init -y \
- && npm pkg set type=module \
- && npm install express node-fetch
 
 # Expose port (used internally by HAProxy)
 EXPOSE 8080

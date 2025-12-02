@@ -1,60 +1,338 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Canario Template</title>
-    <link id="css-link" rel="stylesheet">
-  </head>
-  <body>
-    <div class="container">
-      <h1>Welcome to Canario!</h1>
-      <h3>test change 55</h3>
-      <p id="flag-status">Checking feature flag...</p>
-      <button onclick="checkFeatureFlag()">Refresh Flag</button>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Summer Sounds Festival 2024 – Live Music Experience</title>
+  <link id="css-link" rel="stylesheet">
+</head>
+<body>
+  <!-- Feature Flag Banner -->
+  <div id="announcement-banner" class="banner">
+    <p id="banner-text">🎵 Early Bird Tickets – Coming Soon</p>
+  </div>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="nav-content">
+      <div class="logo">Summer Sounds</div>
+      <ul class="nav-links">
+        <li><a href="#lineup">Lineup</a></li>
+        <li><a href="#tickets">Tickets</a></li>
+        <li><a href="#venue">Venue</a></li>
+        <li><a href="#info">Info</a></li>
+      </ul>
     </div>
+  </nav>
 
-    <script>
-      // Dynamically set CSS path based on current location
-      const basePath = window.location.pathname.replace(/\/$/, "");
-      document.getElementById("css-link").href = basePath + "/styles.css";
-      const FEATURE_FLAG_NAME = "flag1";
+  <!-- Hero Section -->
+  <header class="hero">
+    <img
+      src="https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=1600&q=80"
+      alt="Concert Crowd"
+      class="hero-bg"
+    />
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <h1>Summer Sounds Festival</h1>
+      <p class="subtitle">July 15-17, 2024 • Oslo, Norway</p>
+      <div class="hero-buttons">
+        <a class="btn primary" href="#tickets">Get Tickets</a>
+        <a class="btn secondary" href="#lineup">View Lineup</a>
+      </div>
+    </div>
+  </header>
 
-      async function checkFeatureFlag() {
-        const status = document.getElementById("flag-status");
+  <!-- Featured Ticket Section -->
+  <section id="tickets" class="section">
+    <div class="container">
+      <h2 class="section-title">Get Your Tickets</h2>
+      
+      <!-- Default Ticket Option (General Admission) -->
+      <div id="ticket-general" class="ticket-card">
+        <div class="ticket-image-wrapper">
+          <img
+            src="https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=800&q=80"
+            alt="General Admission"
+            class="ticket-image"
+          />
+        </div>
+        <div class="ticket-info">
+          <h3>General Admission</h3>
+          <p class="price">$89</p>
+          <p class="description">
+            Full access to all stages and performances. Includes entry to all three days of the festival. 
+            Food and drinks available for purchase on-site.
+          </p>
+          <ul class="ticket-features">
+            <li>✓ Access to all stages</li>
+            <li>✓ All three festival days</li>
+            <li>✓ Re-entry allowed</li>
+            <li>✓ Access to food vendors</li>
+          </ul>
+          <button class="ticket-btn">Buy Now</button>
+        </div>
+      </div>
 
-        try {
-          // Use current path to construct correct flags endpoint
-          // This ensures each project fetches its own flags via HAProxy routing
-          const flagsPath = window.location.pathname.replace(/\/$/, "") + "/flags";
-          const res = await fetch(flagsPath, { cache: "no-store" });
-          if (!res.ok) throw new Error("Flag proxy error");
+      <!-- VIP Ticket Option - Shown when flag is active -->
+      <div id="ticket-vip" class="ticket-card" style="display: none;">
+        <div class="ticket-image-wrapper">
+          <div class="vip-badge-overlay">VIP</div>
+          <img
+            src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=800&q=80"
+            alt="VIP Experience"
+            class="ticket-image"
+          />
+        </div>
+        <div class="ticket-info">
+          <h3>VIP Experience</h3>
+          <p class="price">$199 <span class="price-note">Early Bird Special</span></p>
+          <p class="description">
+            Premium festival experience with exclusive perks. Includes VIP lounge access, 
+            priority entry, complimentary drinks, and meet & greet opportunities with select artists.
+          </p>
+          <ul class="ticket-features">
+            <li>✓ Everything in General Admission</li>
+            <li>✓ VIP lounge access</li>
+            <li>✓ Priority entry & parking</li>
+            <li>✓ Complimentary drinks (3 per day)</li>
+            <li>✓ Meet & greet opportunities</li>
+            <li>✓ Exclusive VIP merchandise</li>
+          </ul>
+          <button class="ticket-btn vip-btn">Buy VIP Tickets</button>
+        </div>
+      </div>
+    </div>
+  </section>
 
-          const data = await res.json();
+  <!-- Lineup Section -->
+  <section id="lineup" class="section alt-bg">
+    <div class="container">
+      <h2 class="section-title">Artist Lineup</h2>
+      <div class="lineup-grid">
+        <div class="artist-card">
+          <div class="artist-image">
+            <img src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=400&q=80" alt="Artist">
+          </div>
+          <h3>The Midnight Waves</h3>
+          <p class="artist-time">Friday, 8:00 PM</p>
+        </div>
+        <div class="artist-card">
+          <div class="artist-image">
+            <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=400&q=80" alt="Artist">
+          </div>
+          <h3>Electric Dreams</h3>
+          <p class="artist-time">Saturday, 9:30 PM</p>
+        </div>
+        <div class="artist-card">
+          <div class="artist-image">
+            <img src="https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?auto=format&fit=crop&w=400&q=80" alt="Artist">
+          </div>
+          <h3>Neon Nights</h3>
+          <p class="artist-time">Sunday, 7:00 PM</p>
+        </div>
+        <div class="artist-card">
+          <div class="artist-image">
+            <img src="https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=400&q=80" alt="Artist">
+          </div>
+          <h3>Stellar Beats</h3>
+          <p class="artist-time">Friday, 10:00 PM</p>
+        </div>
+        <div class="artist-card">
+          <div class="artist-image">
+            <img src="https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=400&q=80" alt="Artist">
+          </div>
+          <h3>Cosmic Vibes</h3>
+          <p class="artist-time">Saturday, 8:30 PM</p>
+        </div>
+        <div class="artist-card">
+          <div class="artist-image">
+            <img src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=400&q=80" alt="Artist">
+          </div>
+          <h3>Sunset Sessions</h3>
+          <p class="artist-time">Sunday, 9:00 PM</p>
+        </div>
+      </div>
+    </div>
+  </section>
 
-          if (!data.hasOwnProperty(FEATURE_FLAG_NAME)) {
-            throw new Error(`Feature flag "${FEATURE_FLAG_NAME}" not found`);
-          }
+  <!-- Venue Section -->
+  <section id="venue" class="section">
+    <div class="container">
+      <h2 class="section-title">Venue Information</h2>
+      <div class="venue-content">
+        <div class="venue-info">
+          <h3>Oslo Festival Grounds</h3>
+          <p class="venue-description">
+            Located in the heart of Oslo, the Festival Grounds offer a stunning outdoor setting 
+            with multiple stages, food vendors, and comfortable facilities. The venue is easily 
+            accessible by public transport and offers ample parking.
+          </p>
+          <div class="venue-details">
+            <div class="detail-item">
+              <strong>📍 Address:</strong>
+              <p>Festival Park, 0123 Oslo, Norway</p>
+            </div>
+            <div class="detail-item">
+              <strong>🚇 Public Transport:</strong>
+              <p>Metro Line 1, 2, 3 to Festival Station</p>
+            </div>
+            <div class="detail-item">
+              <strong>🅿️ Parking:</strong>
+              <p>Available on-site (pre-booking recommended)</p>
+            </div>
+            <div class="detail-item">
+              <strong>⏰ Gates Open:</strong>
+              <p>2:00 PM daily</p>
+            </div>
+          </div>
+        </div>
+        <div class="venue-map">
+          <div class="map-placeholder">
+            <p>📍 Venue Map</p>
+            <p class="map-note">Interactive venue map would be embedded here</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-          const isActive = Boolean(data[FEATURE_FLAG_NAME]);
+  <!-- Info Section -->
+  <section id="info" class="section alt-bg">
+    <div class="container">
+      <h2 class="section-title">Festival Information</h2>
+      <div class="info-grid">
+        <div class="info-card">
+          <div class="info-icon">🎒</div>
+          <h3>What to Bring</h3>
+          <ul>
+            <li>Valid ID</li>
+            <li>Your ticket (digital or printed)</li>
+            <li>Cash and cards</li>
+            <li>Comfortable clothing</li>
+            <li>Sun protection</li>
+          </ul>
+        </div>
+        <div class="info-card">
+          <div class="info-icon">🚫</div>
+          <h3>Prohibited Items</h3>
+          <ul>
+            <li>Outside food and drinks</li>
+            <li>Large bags or backpacks</li>
+            <li>Professional cameras</li>
+            <li>Weapons of any kind</li>
+            <li>Illegal substances</li>
+          </ul>
+        </div>
+        <div class="info-card">
+          <div class="info-icon">❓</div>
+          <h3>FAQ</h3>
+          <ul>
+            <li>Age restrictions: 18+</li>
+            <li>Re-entry allowed with wristband</li>
+            <li>Lost & Found at main entrance</li>
+            <li>First aid stations available</li>
+            <li>ATM machines on-site</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
 
-          if (isActive) {
-            document.body.classList.add("flag-on");
-            document.body.classList.remove("flag-off");
-            status.innerHTML = `Feature <b>${FEATURE_FLAG_NAME}</b> is <b>ON</b>!`;
-          } else {
-            document.body.classList.add("flag-off");
-            document.body.classList.remove("flag-on");
-            status.innerHTML = `Feature <b>${FEATURE_FLAG_NAME}</b> is <b>OFF</b>.`;
-          }
-        } catch (error) {
-          console.error(error);
-          document.body.classList.remove("flag-on", "flag-off");
-          status.innerHTML = "Could not fetch feature flag state.";
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h3>Summer Sounds Festival</h3>
+          <p>Three days of unforgettable music and experiences</p>
+        </div>
+        <div class="footer-section">
+          <h3>Contact</h3>
+          <p>Email: info@summersounds.no</p>
+          <p>Phone: +47 123 45 678</p>
+        </div>
+        <div class="footer-section">
+          <h3>Follow Us</h3>
+          <div class="social-links">
+            <a href="#">Instagram</a>
+            <a href="#">Facebook</a>
+            <a href="#">Twitter</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2024 Summer Sounds Festival. All rights reserved.</p>
+        <p id="flag-status" class="flag-status">Checking feature flag...</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Dynamically set CSS path based on current location
+    const basePath = window.location.pathname.replace(/\/$/, "");
+    document.getElementById("css-link").href = basePath + "/styles.css?v=1";
+
+    const FEATURE_FLAG_NAME = "vip_tickets";
+
+    async function checkFeatureFlag() {
+      const banner = document.getElementById("announcement-banner");
+      const bannerText = document.getElementById("banner-text");
+      const status = document.getElementById("flag-status");
+      const ticketGeneral = document.getElementById("ticket-general");
+      const ticketVip = document.getElementById("ticket-vip");
+      
+      try {
+        const flagsPath = window.location.pathname.replace(/\/$/, "") + "/flags";
+        const res = await fetch(flagsPath, { cache: "no-store" });
+        const data = await res.json();
+        
+        if (data[FEATURE_FLAG_NAME]) {
+          // Feature flag is active - show VIP tickets and "Available Now" banner
+          bannerText.textContent = "🎵 Early Bird VIP Tickets – Available Now";
+          banner.classList.add("active");
+          banner.classList.remove("inactive");
+          ticketGeneral.style.opacity = "0";
+          setTimeout(() => {
+            ticketGeneral.style.display = "none";
+            ticketVip.style.display = "flex";
+            ticketVip.style.opacity = "0";
+            setTimeout(() => {
+              ticketVip.style.opacity = "1";
+            }, 10);
+          }, 300);
+          status.textContent = "✓ VIP Tickets Feature: ACTIVE";
+          status.style.color = "#10b981";
+        } else {
+          // Feature flag is inactive - show general admission and "Coming Soon" banner
+          bannerText.textContent = "🎵 Early Bird Tickets – Coming Soon";
+          banner.classList.add("inactive");
+          banner.classList.remove("active");
+          ticketVip.style.opacity = "0";
+          setTimeout(() => {
+            ticketVip.style.display = "none";
+            ticketGeneral.style.display = "flex";
+            ticketGeneral.style.opacity = "0";
+            setTimeout(() => {
+              ticketGeneral.style.opacity = "1";
+            }, 10);
+          }, 300);
+          status.textContent = "○ VIP Tickets Feature: INACTIVE";
+          status.style.color = "#6b7280";
         }
+      } catch (err) {
+        bannerText.textContent = "🎵 Early Bird Tickets – Coming Soon";
+        banner.classList.add("inactive");
+        banner.classList.remove("active");
+        ticketGeneral.style.display = "flex";
+        ticketVip.style.display = "none";
+        status.textContent = "⚠ Feature flag check failed";
+        status.style.color = "#ef4444";
       }
+    }
 
-      // Check immediately when page loads
-      checkFeatureFlag();
-    </script>
-  </body>
+    // Check immediately when page loads
+    checkFeatureFlag();
+  </script>
+</body>
 </html>

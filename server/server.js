@@ -6,10 +6,9 @@ const { GITLAB_ACCESS_TOKEN, PROJECT_ID } = process.env;
 
 // Validate required environment variables on startup
 if (!PROJECT_ID || !GITLAB_ACCESS_TOKEN) {
-    console.error(
-        "[ERROR] Missing required environment variables: PROJECT_ID, GITLAB_ACCESS_TOKEN"
+    console.warn(
+        "[WARNING] Missing required environment variables: PROJECT_ID, GITLAB_ACCESS_TOKEN"
     );
-    process.exit(1);
 }
 
 console.log(`[INFO] Server starting for project ${PROJECT_ID}`);
@@ -20,6 +19,11 @@ app.use(express.static("site"));
 
 // Feature flag route
 app.get("/flags", async (_req, res) => {
+    if (!PROJECT_ID || !GITLAB_ACCESS_TOKEN) {
+        console.warn("[WARNING] /flags requested but env vars missing. Returning empty object");
+        return res.json({});
+    }
+
     try {
         const url = `https://gitlab.cs.oslomet.no/api/v4/projects/${PROJECT_ID}/feature_flags`;
         const r = await fetch(url, {

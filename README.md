@@ -18,7 +18,7 @@ canario-template/
 
 ## Key Features
 
-### ✅ CI/CD Pipeline Integration
+### CI/CD Pipeline Integration
 
 -   **Pipeline Template**: References `canario-ci` repository for standardized workflows
 -   **Stages**: Build → Test → Push → Deploy

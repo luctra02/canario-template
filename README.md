@@ -25,20 +25,20 @@ canario-template/
 -   **Deployment Modes**: Supports both standard and canary deployments
 -   **Automated Testing**: Health checks before deployment
 
-### ✅ Docker Containerization
+### Docker Containerization
 
 -   Node.js 20 Alpine-based image
 -   Express server serving static files
 -   Feature flag API endpoint proxying to GitLab
 
-### ✅ Feature Flags (GitLab Integration)
+### Feature Flags (GitLab Integration)
 
 -   Server-side proxy endpoint (`/flags`) fetching from GitLab API
 -   Client-side JavaScript polling for flag states
 -   Visual feedback when flags change state
 -   No rebuild required for flag changes
 
-### ✅ Deployment Options
+### Deployment Options
 
 -   **Standard Deployment**: Immediate replacement of old version
 -   **Canary Deployment**: Gradual rollout (10% → 30% → 60% → 100%)
